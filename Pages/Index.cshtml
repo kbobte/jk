@@ -1,0 +1,44 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Football Leagues";
+}
+
+<h2>Football Leagues</h2>
+
+@if (Model.ErrorMessage != null)
+{
+    <p class="alert alert-danger">@Model.ErrorMessage</p>
+}
+else if (Model.CompetitionsData != null)
+{
+    var competitions = Model.CompetitionsData.RootElement.GetProperty("competitions");
+
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>League</th>
+                <th>Country</th>
+                <th>Emblem</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var competition in competitions.EnumerateArray())
+            {
+                var leagueCode = competition.GetProperty("code").GetString();
+                <tr>
+                    <td>@competition.GetProperty("name").GetString()</td>
+                    <td>@competition.GetProperty("area").GetProperty("name").GetString()</td>
+                    <td>
+                        <img src="@competition.GetProperty("emblem").GetString()" width="50" alt="League Emblem">
+                    </td>
+                    <td>
+                        <a href="/Standings?leagueCode=@leagueCode" class="btn btn-primary btn-sm">View Standings</a>
+                        <a href="/Scorers?leagueCode=@leagueCode" class="btn btn-warning btn-sm">Top Scorers</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

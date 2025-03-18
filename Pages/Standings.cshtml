@@ -1,0 +1,178 @@
+@page
+@model StandingsModel
+@{
+    ViewData["Title"] = "League Standings";
+
+    @* if (Model.StandingsData != null) { *@
+
+        var teams = Model.StandingsData.RootElement.GetProperty("standings")[0].GetProperty("table");
+        
+        // Convert JSON data to lists
+        List<string> teamNames = new List<string>();
+        List<int> goalsScored = new List<int>();
+        List<int> points = new List<int>();
+
+        foreach (var team in teams.EnumerateArray())
+        {
+            var teamName = team.GetProperty("team").GetProperty("name").GetString();
+            var goals = team.GetProperty("goalsFor").GetInt32();
+            var teamPoints = team.GetProperty("points").GetInt32();
+
+            teamNames.Add(teamName);
+            goalsScored.Add(goals);
+            points.Add(teamPoints);
+        }
+
+        // Convert C# lists to JSON strings
+        var teamNamesJson = System.Text.Json.JsonSerializer.Serialize(teamNames);
+        var goalsScoredJson = System.Text.Json.JsonSerializer.Serialize(goalsScored);
+        var pointsJson = System.Text.Json.JsonSerializer.Serialize(points);
+    @* } *@
+}
+
+<h2>League Standings</h2>
+
+@if (Model.ErrorMessage != null)
+{
+    <p class="alert alert-danger">@Model.ErrorMessage</p>
+}
+else if (Model.StandingsData != null)
+{
+    var standings = Model.StandingsData.RootElement.GetProperty("standings")[0].GetProperty("table");
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-success">
+            <tr>
+                <th>❤️</th>
+                <th>Position</th>
+                <th>Team</th>
+                <th>Played</th>
+                <th>Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var team in standings.EnumerateArray())
+            {
+                var teamId = team.GetProperty("team").GetProperty("id").GetInt32();
+                var teamName = team.GetProperty("team").GetProperty("name").GetString();
+
+                <tr>
+                    <td>
+                    <span class="favorite-icon" data-team-id="@teamId" data-team-name="@teamName" onclick="toggleFavorite(@teamId, '@teamName')">
+                        🤍
+                    </span>
+                    </td>
+                    <td>@team.GetProperty("position").GetInt32()</td>
+                    <td>
+                        <img src="@team.GetProperty("team").GetProperty("crest").GetString()" width="30">
+                        @team.GetProperty("team").GetProperty("name").GetString()
+                    </td>
+                    <td>@team.GetProperty("playedGames").GetInt32()</td>
+                    <td class="fw-bold">@team.GetProperty("points").GetInt32()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<!-- Charts Section -->
+<h3>League Statistics</h3>
+<div class="row">
+    <div class="col-md-6">
+        <canvas id="goalsChart"></canvas>
+    </div>
+    <div class="col-md-6">
+        <canvas id="pointsChart"></canvas>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+@* Analytics - goals, points *@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Use Razor to inject JSON data
+    const teamNames = @Html.Raw(teamNamesJson);
+    const goalsScored = @Html.Raw(goalsScoredJson);
+    const points = @Html.Raw(pointsJson);
+
+    // Goals Scored Bar Chart
+    new Chart(document.getElementById("goalsChart"), {
+        type: 'bar',
+        data: {
+            labels: teamNames,
+            datasets: [{
+                label: 'Goals Scored',
+                data: goalsScored,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Points Distribution Line Chart
+    new Chart(document.getElementById("pointsChart"), {
+        type: 'line',
+        data: {
+            labels: teamNames,
+            datasets: [{
+                label: 'Points',
+                data: points,
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+});
+</script>
+
+@* Favourite team *@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    loadFavorites();
+});
+
+function toggleFavorite(teamId, teamName) {
+    let favorites = JSON.parse(localStorage.getItem("favoriteTeams")) || [];
+    const index = favorites.findIndex(team => team.id === teamId);
+
+    if (index !== -1) {
+        favorites.splice(index, 1); // Remove if already a favorite
+    } else {
+        favorites.push({ id: teamId, name: teamName });
+    }
+
+    localStorage.setItem("favoriteTeams", JSON.stringify(favorites));
+    updateFavoritesUI();
+}
+
+function loadFavorites() {
+    let favorites = JSON.parse(localStorage.getItem("favoriteTeams")) || [];
+    document.querySelectorAll(".favorite-icon").forEach(icon => {
+        let teamId = parseInt(icon.getAttribute("data-team-id"));
+        if (favorites.some(team => team.id === teamId)) {
+            icon.innerHTML = "❤️"; // Filled heart
+        } else {
+            icon.innerHTML = "🤍"; // Empty heart
+        }
+    });
+}
+
+function updateFavoritesUI() {
+    loadFavorites();
+}
+</script>

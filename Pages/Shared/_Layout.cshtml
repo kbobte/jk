@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - myApp</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/myApp.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3" id="navbar">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">myApp</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Leagues</a>
+                        </li>
+                        <li class="nav-item">
+                            <!-- <a class="nav-link text-dark" asp-area="" asp-page="/Stats">Stats</a> -->
+                        </li>
+                    </ul>
+                </div>
+                
+                <button id="themeToggle" class="btn btn-outline-light">🌙 Dark Mode</button>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+@* 
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <!-- &copy; 2025 - myApp - <a asp-area="" asp-page="/Privacy">Privacy</a> -->
+        </div>
+    </footer> *@
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const theme = localStorage.getItem("theme");
+    const body = document.body;
+    const navbar = document.getElementById("navbar");
+    const themeToggleButton = document.getElementById("themeToggle");
+    const navbarLinks = document.querySelectorAll(".navbar-nav .nav-link");
+
+    // Function to change navbar link colors
+    function updateNavbarLinkColors(isDarkMode) {
+        navbarLinks.forEach(link => {
+            if (isDarkMode) {
+                link.classList.remove("text-dark");
+                link.classList.add("text-light");
+            } else {
+                link.classList.remove("text-light");
+                link.classList.add("text-dark");
+            }
+        });
+    }
+
+    // Set the theme on page load
+    if (theme === "dark") {
+        body.classList.add("dark-mode");
+        navbar.classList.remove("navbar-light", "bg-white");
+        navbar.classList.add("navbar-dark", "bg-dark");
+        themeToggleButton.innerText = "☀️ Light Mode";
+        updateNavbarLinkColors(true); // Dark mode, update links to light
+    }
+
+    // Toggle theme when button is clicked
+    themeToggleButton.addEventListener("click", function () {
+        body.classList.toggle("dark-mode");
+
+        if (body.classList.contains("dark-mode")) {
+            navbar.classList.remove("navbar-light", "bg-white");
+            navbar.classList.add("navbar-dark", "bg-dark");
+            localStorage.setItem("theme", "dark");
+            themeToggleButton.innerText = "☀️ Light Mode";
+            updateNavbarLinkColors(true); // Dark mode, update links to light
+        } else {
+            navbar.classList.remove("navbar-dark", "bg-dark");
+            navbar.classList.add("navbar-light", "bg-white");
+            localStorage.setItem("theme", "light");
+            themeToggleButton.innerText = "🌙 Dark Mode";
+            updateNavbarLinkColors(false); // Light mode, update links to dark
+        }
+    });
+});
+</script>
+
+
+</html>
